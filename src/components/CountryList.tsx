@@ -1,8 +1,8 @@
-// src/components/CountryList.tsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllCountries } from '../services/api';
 import Pagination from './Pagination';
+import SearchBar from './SearchBar';
 
 interface Country {
   name: { common: string };
@@ -14,6 +14,7 @@ const CountryList: React.FC = () => {
   const [countries, setCountries] = useState<Country[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [countriesPerPage] = useState(5);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     getAllCountries()
@@ -21,18 +22,28 @@ const CountryList: React.FC = () => {
       .catch(error => console.error('Error fetching countries:', error));
   }, []);
 
+  const filteredCountries = countries.filter(country =>
+    country.name.common.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const indexOfLastCountry = currentPage * countriesPerPage;
   const indexOfFirstCountry = indexOfLastCountry - countriesPerPage;
-  const currentCountries = countries.slice(indexOfFirstCountry, indexOfLastCountry);
-  const totalPages = Math.ceil(countries.length / countriesPerPage);
+  const currentCountries = filteredCountries.slice(indexOfFirstCountry, indexOfLastCountry);
+  const totalPages = Math.ceil(filteredCountries.length / countriesPerPage);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Resetea la página actual a 1 cuando se realiza una nueva búsqueda
+  };
+
   return (
     <div className="country-list">
       <h1>Lista de Países</h1>
+      <SearchBar onSearch={handleSearch} />
       <ul>
         {currentCountries.map(country => (
           <li key={country.cca3} className="country-item">
